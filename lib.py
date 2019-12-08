@@ -40,7 +40,7 @@ class Attack:
         :param atk_string: '+hitchance var_dmg+con_dmg' for example '+11 3d8+3'
         :return: an Attack object
         """
-
+        print(f'got input [{atk_string}]')
         to_hit, var_dmg, con_dmg = re.findall(r'\+(\d+) (\d+d\d+)\+(\d+)', atk_string)[0]
         return cls(int(to_hit), var_dmg, int(con_dmg))
 
