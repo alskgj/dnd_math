@@ -25,7 +25,7 @@ class UserInput:
 
         try:
             self.attack = Attack.from_string(data['attack'])
-        except RuntimeError:
+        except ValueError:
             self.valid = False
         else:
             self.valid = True
@@ -87,14 +87,11 @@ def index():
 
     # generate graph
     if attackform.validate_on_submit() and attackform.attack_submit.data:
-        atks = []
         form_data = []
         for entry in attackform.attacks:
-            try:
-                form_data.append(UserInput(entry))
-                atks.append(Attack.from_string(entry.data['attack']))
-            except ValueError:
-                pass
+            ui = UserInput(entry)
+            if ui.valid:
+                form_data.append(ui)
 
         ids, graphjson = make_graphjson(form_data)
 

@@ -37,17 +37,36 @@ class Attack:
     @classmethod
     def from_string(cls, atk_string: str):
         """
+        Accepted patterns:
+        +10 2d8
+        +10 2d8+4
+        -10 2d8+4
+        -10 2d8-2
+        +10 2d8-2
 
         :param atk_string: '+hitchance var_dmg+con_dmg' for example '+11 3d8+3'
         :return: an Attack object
         """
-        try:
-            to_hit, var_dmg, con_dmg = re.findall(r'\+(\d+) (\d+d\d+)\+(\d+)', atk_string)[0]
-        except IndexError:
-            logging.critical("Index error while parsing %s", atk_string)
+        pattern = re.compile(r'^([+-])(\d+) (\d+d\d+)(([+-])(\d+))?$')
+        atk_string = atk_string.strip()
+        if not pattern.match(atk_string):
+            logging.critical("Not a valid pattern: %s", atk_string)
             raise ValueError('Can\'t build attack from string [%s]' % atk_string)
 
-        return cls(int(to_hit), var_dmg, int(con_dmg))
+        tmp = pattern.findall(atk_string)[0]
+        to_hit = int(tmp[1])
+        if tmp[0] == '-':
+            to_hit *= -1
+        var_dmg = tmp[2]
+        if tmp[4] and tmp[5]:
+            con_dmg = int(tmp[5])
+            if tmp[4] == '-':
+                con_dmg *= -1
+        else:
+            con_dmg = 0
+        logging.debug(f'parsed {atk_string} to {to_hit} {var_dmg} + {con_dmg}')
+
+        return cls(to_hit, var_dmg, con_dmg)
 
     def expected_damage(self, ac, crit_chance=0.05, crit_modifier=2, advantage=False, round_=True):
         """

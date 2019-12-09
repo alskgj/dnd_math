@@ -18,9 +18,8 @@ class AttackForm(FlaskForm):
 
 
 class AttackEntryForm(FlaskForm):
-    attack = StringField()
+    attack = StringField(validators=[Regexp(regex=r'^([+-])(\d+) (\d+d\d+)(([+-])(\d+))?$', message='Invalid input')])
     advantage = BooleanField(label='advantage')
-
 
 
 class AttackForm2(FlaskForm):

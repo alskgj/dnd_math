@@ -15,11 +15,11 @@
     </div>
 
     <div class="container">
-
         <div class="row">
             <div class="col-8"> Damage string</div>
             <div class="col-4"> Advantage</div>
         </div>
+
         <form method="POST" action="/">
             {{ form.hidden_tag() }}
             {% for attack_entry_form in form.attacks %}
@@ -28,11 +28,18 @@
                     <div class="col-8">
                         {{ attack_entry_form.hidden_tag() }}
                         {{ attack_entry_form.attack }}
+                        {% if attack_entry_form.attack.errors %}
+
+                                {% for error in attack_entry_form.attack.errors %}
+                                    {{ error }}
+                                {% endfor %}
+
+                        {% endif %}
                     </div>
+
                     <div class="col-4">
                         {{ attack_entry_form.advantage }}
                     </div>
-
 
                 </div>
             {% endfor %}
