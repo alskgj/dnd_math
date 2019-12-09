@@ -1,13 +1,14 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>dnd calc</title>
 </head>
 
 <body>
-
+    <h2>A dnd 5e calculator</h2>
     {% block content %}{% endblock %}
 
 </body>
@@ -31,6 +32,7 @@
         var ids = {{ids | safe}};
 
         for(var i in graphs) {
+
             Plotly.plot(ids[i], // the ID of the div, created above
                         graphs[i].data,
                         graphs[i].layout || {});

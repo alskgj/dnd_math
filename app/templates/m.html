@@ -17,50 +17,43 @@
     <div class="container">
 
         <div class="row">
-            <div class="col-8"> Damage string </div>
-            <div class="col-4"> Advantage </div>
+            <div class="col-8"> Damage string</div>
+            <div class="col-4"> Advantage</div>
         </div>
         <form method="POST" action="/">
             {{ form.hidden_tag() }}
             {% for attack_entry_form in form.attacks %}
                 <div class="row">
 
-                        <div class="col-8">
-                            {{ attack_entry_form.hidden_tag() }}
-                            {{ attack_entry_form.attack }}
-                        </div>
-                        <div class="col-4">
+                    <div class="col-8">
+                        {{ attack_entry_form.hidden_tag() }}
+                        {{ attack_entry_form.attack }}
+                    </div>
+                    <div class="col-4">
                         {{ attack_entry_form.advantage }}
-                        </div>
-
+                    </div>
 
 
                 </div>
             {% endfor %}
-        <div class="row">
-            <div class="col-8"> {{ form.attack_submit }} </div>
+            <div class="row">
+                <div class="col-8"> {{ form.attack_submit }} </div>
 
-        </div>
+            </div>
         </form>
     </div>
 
-{% for id in ids %}
-  <h3>{{id}}</h3>
-  <div id="{{id}}"></div>
-{% endfor %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                {% for id in ids %}
+                    <div id="{{ id }}"></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
-<script type="text/javascript">
 
-var graphs = {{graphJSON | safe}};
-var ids = {{ids | safe}};
-
-for(var i in graphs) {
-    Plotly.plot(ids[i], // the ID of the div, created above
-                graphs[i].data,
-                graphs[i].layout || {});
-}
-
-</script>
 
 
 

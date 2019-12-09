@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
-
+from flask_wtf import FlaskForm
 import json
 import plotly
 
@@ -18,25 +18,45 @@ app.config['SECRET_KEY'] = SECRET_KEY
 app.config['attacks'] = [{'attack': '+10 2d8+4'}]
 
 
+class UserInput:
+    def __init__(self, form: FlaskForm):
+        """Takes a form and extracts the information"""
+        data = form.data
+
+        try:
+            self.attack = Attack.from_string(data['attack'])
+        except RuntimeError:
+            self.valid = False
+        else:
+            self.valid = True
+
+        self.advantage = data['advantage']
+
+
 def setup_logging():
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 
-def make_graphjson(atks: typing.List[Attack], name=None):
-    ac_range = range(24, 8, -1)
+def make_graphjson(atks: typing.List[UserInput], name=None):
+    ac_range = range(34, 2, -1)
     x = list(ac_range)
 
     data = list()
     for atk in atks:
-        name = atk.atk_string
-        y = [atk.expected_damage(i) for i in x]
+        name = atk.attack.atk_string + atk.advantage*" (advantage)"
+
+        y = [atk.attack.expected_damage(i, advantage=atk.advantage) for i in x]
         data.append({'x': x, 'y': y, 'type': 'scatter', 'name': name})
 
     graphs = [
         {
             'data': data,
-            'layout': {'title': 'calculation'}
+            'layout': {
+                'title': 'Expected damage depending on enemy AC',
+                'xaxis': {'title': 'Enemy Armor Class'},
+                'yaxis': {'title': 'Expected damage'}
+            }
         },
     ]
 
@@ -68,13 +88,15 @@ def index():
     # generate graph
     if attackform.validate_on_submit() and attackform.attack_submit.data:
         atks = []
+        form_data = []
         for entry in attackform.attacks:
             try:
+                form_data.append(UserInput(entry))
                 atks.append(Attack.from_string(entry.data['attack']))
             except ValueError:
                 pass
 
-        ids, graphjson = make_graphjson(atks)
+        ids, graphjson = make_graphjson(form_data)
 
         return render_template('m.html', form=attackform, adder=adderform, ids=ids, graphJSON=graphjson)
 
