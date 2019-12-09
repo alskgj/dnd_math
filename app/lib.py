@@ -42,7 +42,6 @@ class Attack:
         :return: an Attack object
         """
         try:
-            print(atk_string)
             to_hit, var_dmg, con_dmg = re.findall(r'\+(\d+) (\d+d\d+)\+(\d+)', atk_string)[0]
         except IndexError:
             logging.critical("Index error while parsing %s", atk_string)

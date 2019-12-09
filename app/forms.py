@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 
-from wtforms import StringField, TextField, SubmitField, FieldList, FormField
-from wtforms.validators import DataRequired, Length, Regexp
+from wtforms import StringField, SubmitField, FieldList, FormField, BooleanField
+from wtforms.validators import DataRequired, Regexp
 
 
 class AttackForm(FlaskForm):
@@ -19,6 +19,8 @@ class AttackForm(FlaskForm):
 
 class AttackEntryForm(FlaskForm):
     attack = StringField()
+    advantage = BooleanField(label='advantage')
+
 
 
 class AttackForm2(FlaskForm):

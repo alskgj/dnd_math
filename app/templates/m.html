@@ -1,24 +1,48 @@
 {% extends "base.html" %}
 {% block content %}
 
+    <div class="container">
         <form method="POST" action="/">
-            {{ adder.hidden_tag() }}
-            {{ adder.add_submit }}
-            {{ adder.remove_submit }}
-        </form>
+            <div class="row">
+                <div class="col-8">
+                    {{ adder.hidden_tag() }}
+                    {{ adder.add_submit }}
+                    {{ adder.remove_submit }}
+                </div>
 
-    <br>
+            </div>
+        </form>
+    </div>
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-8"> Damage string </div>
+            <div class="col-4"> Advantage </div>
+        </div>
         <form method="POST" action="/">
             {{ form.hidden_tag() }}
             {% for attack_entry_form in form.attacks %}
-                <div class="form-field">
-                    {{ attack_entry_form.hidden_tag() }}
-                    {{ attack_entry_form.attack }}
+                <div class="row">
+
+                        <div class="col-8">
+                            {{ attack_entry_form.hidden_tag() }}
+                            {{ attack_entry_form.attack }}
+                        </div>
+                        <div class="col-4">
+                        {{ attack_entry_form.advantage }}
+                        </div>
+
+
+
                 </div>
-                {# Flask-WTF needs `hidden_tag()` so CSRF works for each form #}
             {% endfor %}
-            {{ form.attack_submit }}
+        <div class="row">
+            <div class="col-8"> {{ form.attack_submit }} </div>
+
+        </div>
         </form>
+    </div>
 
 {% for id in ids %}
   <h3>{{id}}</h3>
