@@ -15,6 +15,7 @@ dmg = a.expected_dmg(ac=15, reroll_ones=True)
 """
 import math
 import re
+import logging
 
 
 class Attack:
@@ -40,8 +41,13 @@ class Attack:
         :param atk_string: '+hitchance var_dmg+con_dmg' for example '+11 3d8+3'
         :return: an Attack object
         """
-        print(f'got input [{atk_string}]')
-        to_hit, var_dmg, con_dmg = re.findall(r'\+(\d+) (\d+d\d+)\+(\d+)', atk_string)[0]
+        try:
+            print(atk_string)
+            to_hit, var_dmg, con_dmg = re.findall(r'\+(\d+) (\d+d\d+)\+(\d+)', atk_string)[0]
+        except IndexError:
+            logging.critical("Index error while parsing %s", atk_string)
+            raise ValueError('Can\'t build attack from string [%s]' % atk_string)
+
         return cls(int(to_hit), var_dmg, int(con_dmg))
 
     def expected_damage(self, ac, crit_chance=0.05, crit_modifier=2, advantage=False, round_=True):

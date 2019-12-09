@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+
+        <form method="POST" action="/">
+            {{ adder.hidden_tag() }}
+            {{ adder.add_submit }}
+            {{ adder.remove_submit }}
+        </form>
+
+    <br>
+        <form method="POST" action="/">
+            {{ form.hidden_tag() }}
+            {% for attack_entry_form in form.attacks %}
+                <div class="form-field">
+                    {{ attack_entry_form.hidden_tag() }}
+                    {{ attack_entry_form.attack }}
+                </div>
+                {# Flask-WTF needs `hidden_tag()` so CSRF works for each form #}
+            {% endfor %}
+            {{ form.attack_submit }}
+        </form>
+
+{% for id in ids %}
+  <h3>{{id}}</h3>
+  <div id="{{id}}"></div>
+{% endfor %}
+
+<script type="text/javascript">
+
+var graphs = {{graphJSON | safe}};
+var ids = {{ids | safe}};
+
+for(var i in graphs) {
+    Plotly.plot(ids[i], // the ID of the div, created above
+                graphs[i].data,
+                graphs[i].layout || {});
+}
+
+</script>
+
+
+
+{% endblock %}

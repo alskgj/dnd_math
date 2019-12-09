@@ -8,9 +8,10 @@
 <body>
 
 <div class="formwrapper">
-    <h2 class="title">DND Calc</h2>
     <form method="POST" action="/">
-        <div class="form-field">{{ form.dmg_string1.label }} {{ form.dmg_string1 }}
+
+        <div class="form-field">
+            {{ form.dmg_string1.label }} {{ form.dmg_string1 }}
             {% if form.dmg_string1.errors %}
             <ul class="errors">
                 {% for error in form.dmg_string1.errors %}
