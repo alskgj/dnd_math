@@ -2,3 +2,4 @@ plotly
 flask
 pandas
 flask-wtf
+gunicorn

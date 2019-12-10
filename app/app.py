@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, session, redirect, url_for, request
 import os
 from flask_wtf import FlaskForm
 import json
@@ -15,7 +15,7 @@ app.debug = True
 
 SECRET_KEY = os.urandom(32)
 app.config['SECRET_KEY'] = SECRET_KEY
-app.config['attacks'] = [{'attack': '+10 2d8+4'}]
+
 
 
 class UserInput:
@@ -54,7 +54,7 @@ def make_graphjson(atks: typing.List[UserInput], name=None):
             'data': data,
             'layout': {
                 'title': 'Expected damage depending on enemy AC',
-                'xaxis': {'title': 'Enemy Armor Class'},
+                'xaxis': {'title': 'Enemy Armor Class', 'range': [10, 20]},
                 'yaxis': {'title': 'Expected damage'}
             }
         },
@@ -73,22 +73,29 @@ def make_graphjson(atks: typing.List[UserInput], name=None):
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
-    attackform = AttackForm2(attacks=app.config["attacks"])
+
+    if 'atks' not in session:
+        session['atks'] = [{'attack': '+8 1d8+3', 'advantage': False, 'csrf_token': ''}]
+
+    attackform = AttackForm2(attacks=session["atks"])
     adderform = AddForms()
 
     # add or remove buttons
     if adderform.validate_on_submit() and adderform.add_submit.data:
-        app.config['attacks'].append({'attack': f'+10 2d8+{len(app.config["attacks"])}'})
+        session['atks'] = session['atks'] + [session['atks'][0]]
         return redirect(url_for('index'))
     if adderform.validate_on_submit() and adderform.remove_submit.data:
-        if len(app.config['attacks']) > 1:
-            app.config['attacks'] = app.config['attacks'][:-1]
+        if len(session['atks']) > 1:
+            session['atks'] = session['atks'][:-1]
         return redirect(url_for('index'))
 
     # generate graph
     if attackform.validate_on_submit() and attackform.attack_submit.data:
+        # persist old data
+        session['atks'] = attackform.attacks.data
+
         form_data = []
-        for entry in attackform.attacks:
+        for i, entry in enumerate(attackform.attacks):
             ui = UserInput(entry)
             if ui.valid:
                 form_data.append(ui)

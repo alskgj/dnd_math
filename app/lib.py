@@ -34,6 +34,36 @@ class Attack:
     def __str__(self):
         return f'Attack [{self.atk_string}]'
 
+
+    @classmethod
+    def from_other_string(cls, atk_string:str ):
+        # todo switch to this class
+        pattern = re.compile(r'^(?:(?P<sign_tohit>[+-])(?P<tohit>\d+) )?'
+                             r'(?P<vardmg>\d+d\d+)'
+                             r'(?:(?P<sign_condmg>[+-])(?P<condmg>\d+))?$')
+        if not pattern.match(atk_string):
+            logging.critical("Not a valid pattern: %s", atk_string)
+            raise ValueError('Can\'t build attack from string [%s]' % atk_string)
+
+        search = pattern.search(atk_string)
+
+        vardmg = search.group('vardmg')
+        if search.group('tohit'):
+            tohit = search.group('tohit')
+            if search.group('sign_tohit') == '-':
+                tohit *= -1
+        else:
+            tohit = 1000 # todo handle no tohit
+
+        if search.group('condmg'):
+            condmg = search.group('condmg')
+        else:
+            condmg = 0
+        if search.group('sign_condmg') == '-':
+            condmg *= -1
+
+
+
     @classmethod
     def from_string(cls, atk_string: str):
         """
@@ -43,10 +73,13 @@ class Attack:
         -10 2d8+4
         -10 2d8-2
         +10 2d8-2
+        2d8-2
+        2d8
 
         :param atk_string: '+hitchance var_dmg+con_dmg' for example '+11 3d8+3'
         :return: an Attack object
         """
+
         pattern = re.compile(r'^([+-])(\d+) (\d+d\d+)(([+-])(\d+))?$')
         atk_string = atk_string.strip()
         if not pattern.match(atk_string):
