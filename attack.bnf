@@ -1,0 +1,12 @@
+start: line
+
+line                : (tohit)? (vardmg | condmg)+
+tohit               : SIGN NUMBER WHITESPACE
+vardmg              : SIGN? NUMBER D NUMBER
+condmg              : SIGN? NUMBER
+
+NUMBER              : ("0".."9")+
+SIGN                : ("+"|"-")
+D                   : "d"
+WHITESPACE          : (" "|"\\n")+
+%ignore WHITESPACE
