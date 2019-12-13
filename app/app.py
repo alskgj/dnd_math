@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for, request
+from flask import Flask, render_template, session, redirect, url_for
 import os
 from flask_wtf import FlaskForm
 import json
@@ -15,7 +15,6 @@ app.debug = True
 
 SECRET_KEY = os.urandom(32)
 app.config['SECRET_KEY'] = SECRET_KEY
-
 
 
 class UserInput:
@@ -44,7 +43,7 @@ def make_graphjson(atks: typing.List[UserInput], name=None):
 
     data = list()
     for atk in atks:
-        name = atk.attack.atk_string + atk.advantage*" (advantage)"
+        name = str(atk.attack)
 
         y = [atk.attack.expected_damage(i, advantage=atk.advantage) for i in x]
         data.append({'x': x, 'y': y, 'type': 'scatter', 'name': name})
@@ -61,7 +60,6 @@ def make_graphjson(atks: typing.List[UserInput], name=None):
     ]
 
     ids = [f'graph-{i}' for i, _ in enumerate(graphs)]
-
 
     # Convert the figures to JSON
     # PlotlyJSONEncoder appropriately converts pandas, datetime, etc

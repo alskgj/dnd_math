@@ -13,95 +13,150 @@ dmg = a.expected_dmg(ac=15, advantage=True)
 dmg = a.expected_dmg(ac=15, reroll_ones=True)
 
 """
-import math
+# standard library
 import re
 import logging
+import typing
+
+from config import Config
+
+# third party
+from lark import Lark
+
+
+class VarDmg:
+    """
+    Represents variable damage, which is determined by dice rolls.
+    Rolling 3 dice which each have 20 sides is noted as 3d20.
+    It is necessary to not just calculate the expected value of the dice roll, since
+    those dice are not always rolled the same way (e.g. on a crit the number of rolled dice is doubled
+    and a half orc may even reroll his worst attack die).
+    """
+
+    def __init__(self, number: int, die: int, sign='+'):
+        self.number = number
+        self.die = die
+        self.sign = sign
+
+    @classmethod
+    def from_string(cls, vardmg: str):
+        number, die = vardmg.split('d')
+        return cls(int(number), int(die))
+
+    @property
+    def expected_dmg(self):
+        """This returns expected NONCRITICAL damage"""
+        return self.number * (self.die+1)/2
+
+    @property
+    def expected_critical_dmg(self):
+        # todo implement half-orc
+        return 2*self.expected_dmg
+
+    def __repr__(self):
+        return f'{self.sign}{self.number}d{self.die}'
 
 
 class Attack:
-    def __init__(self, to_hit: int, var_dmg: str, con_dmg=8):
-        assert re.match(r'\d+d\d|', var_dmg), "var_dmg is not in the right format. example: 3d8"
+    """
+    Represents an attack and can calculate its expected dmg.
+    Different types of attack:
+    > +10 1d8+3    -> The standard attack, can crit, has a hit percentage and does 1d8+3 dmg on hit
+    > 1d8+3        -> An attack like magic missile, always hits and can't crit
+    > +6 6d8 (saving throw)  -> An attack life fireball, always hits. Only deals half damage if hostiles make the save
+    ( not implemented)
+
+
+    """
+    def __init__(self, to_hit: typing.Union[None, int], var_dmg: typing.List[VarDmg], con_dmg=0):
+
         self.to_hit = to_hit
-
-        # calculate expected damage from var_dmg
-        # example 3d8 = 13.5
-        times, dice = var_dmg.split('d')
-        self.expected_var_dmg = int(times) * (int(dice)+1)/2 # we need to store this separately for crits
-        self.dmg = con_dmg + self.expected_var_dmg
-
-        self.atk_string = f'+{to_hit} {var_dmg}+{con_dmg}'
+        self.var_dmg = var_dmg
+        self.con_dmg = con_dmg
 
     def __str__(self):
-        return f'Attack [{self.atk_string}]'
-
-
-    @classmethod
-    def from_other_string(cls, atk_string:str ):
-        # todo switch to this class
-        pattern = re.compile(r'^(?:(?P<sign_tohit>[+-])(?P<tohit>\d+) )?'
-                             r'(?P<vardmg>\d+d\d+)'
-                             r'(?:(?P<sign_condmg>[+-])(?P<condmg>\d+))?$')
-        if not pattern.match(atk_string):
-            logging.critical("Not a valid pattern: %s", atk_string)
-            raise ValueError('Can\'t build attack from string [%s]' % atk_string)
-
-        search = pattern.search(atk_string)
-
-        vardmg = search.group('vardmg')
-        if search.group('tohit'):
-            tohit = search.group('tohit')
-            if search.group('sign_tohit') == '-':
-                tohit *= -1
+        """Short version string for endusers"""
+        if self.to_hit is None:
+            to_hit = ''
+        elif self.to_hit > 0:
+            to_hit = f'+{self.to_hit} '
         else:
-            tohit = 1000 # todo handle no tohit
+            to_hit = f'(self.to_hit) '
 
-        if search.group('condmg'):
-            condmg = search.group('condmg')
+        if self.con_dmg is None:
+            con_dmg = ''
+        elif self.con_dmg > 0:
+            con_dmg = f'+{self.con_dmg}'
         else:
-            condmg = 0
-        if search.group('sign_condmg') == '-':
-            condmg *= -1
+            con_dmg = str(self.con_dmg)
 
+        v_string = "".join([str(v) for v in self.var_dmg])
+        return f'{to_hit}{v_string}{con_dmg}'
 
+    def __repr__(self):
+        """Debug string"""
+        if self.to_hit is None:
+            to_hit = '[always hits]'
+        elif self.to_hit > 0:
+            to_hit = f'+{self.to_hit}'
+        else:
+            to_hit = str(self.to_hit)
+
+        v_string = " ".join([str(v) for v in self.var_dmg])
+
+        return f'Attack: {to_hit} {v_string} {self.con_dmg}, E[damage against ac 15]: {self.expected_damage(15)}'
 
     @classmethod
     def from_string(cls, atk_string: str):
-        """
+        """ #
+        Parses the DSL to describe a dnd attack.
         Accepted patterns:
         +10 2d8
         +10 2d8+4
-        -10 2d8+4
-        -10 2d8-2
-        +10 2d8-2
+        +10 10-3 + 5 - 2 3d8 + 2d8 -1d8
         2d8-2
         2d8
+        ...
 
-        :param atk_string: '+hitchance var_dmg+con_dmg' for example '+11 3d8+3'
+        :param atk_string: '+hitchance (var_dmg+con_dmg)+' for example '+11 3d8+3'
         :return: an Attack object
         """
 
-        pattern = re.compile(r'^([+-])(\d+) (\d+d\d+)(([+-])(\d+))?$')
-        atk_string = atk_string.strip()
-        if not pattern.match(atk_string):
-            logging.critical("Not a valid pattern: %s", atk_string)
-            raise ValueError('Can\'t build attack from string [%s]' % atk_string)
+        syntax = Config().attack_syntax
+        lark = Lark(syntax)
+        line = lark.parse(atk_string).children[0]
 
-        tmp = pattern.findall(atk_string)[0]
-        to_hit = int(tmp[1])
-        if tmp[0] == '-':
-            to_hit *= -1
-        var_dmg = tmp[2]
-        if tmp[4] and tmp[5]:
-            con_dmg = int(tmp[5])
-            if tmp[4] == '-':
-                con_dmg *= -1
-        else:
-            con_dmg = 0
-        logging.debug(f'parsed {atk_string} to {to_hit} {var_dmg} + {con_dmg}')
+        to_hit, var_dmg, con_dmg = None, [], 0
+        for t in line.children:
+            if t.data == 'tohit':
+                multiplier = 1
+                for child in t.children:
+                    if child.value == '-':
+                        multiplier = -1
+                    if child.type == 'NUMBER':
+                        to_hit = int(child.value) * multiplier
+
+            elif t.data == 'condmg':
+                multiplier = 1
+                for child in t.children:
+                    if child.value == '-':
+                        multiplier = -1
+                    if child.type == 'NUMBER':
+                        con_dmg += int(child.value) * multiplier
+
+            elif t.data == 'vardmg':
+                kids = t.children
+                sign = '+'
+                if len(kids) == 4:
+                    sign = kids[0].value
+                    number, die = int(kids[1].value), int(kids[3].value)
+                else:
+                    number, die = int(kids[0].value), int(kids[2].value)
+                var_dmg.append(VarDmg(number, die, sign))
 
         return cls(to_hit, var_dmg, con_dmg)
 
-    def expected_damage(self, ac, crit_chance=0.05, crit_modifier=2, advantage=False, round_=True):
+    def expected_damage(self, ac, crit_chance=0.05, advantage=False, round_=True):
         """
         Given some parameters, what damage can be expected
 
@@ -114,7 +169,32 @@ class Attack:
 
         # if 1d20 + self.to_hit >= ac, we have a hit
         # 1 never hits, 20 always hits
+        if self.to_hit is None:
+            return self.expected_damage_always_hit()
 
+        # two dice can roll critically, then we subtract the overlap
+        if advantage:
+            crit_chance = 2*crit_chance - crit_chance**2
+
+        expected_dmg = self.chance_to_hit(ac, advantage) * self.dmg
+        expected_dmg_w_crit = expected_dmg + crit_chance*self.total_var_dmg
+
+        if round_:
+            return round(expected_dmg_w_crit, 2)
+        else:
+            return expected_dmg_w_crit
+
+    @property
+    def total_var_dmg(self):
+        """Noncritical var_dmg"""
+        return sum([v.expected_dmg for v in self.var_dmg])
+
+    @property
+    def dmg(self):
+        """Noncritical total dmg"""
+        return self.total_var_dmg + self.con_dmg
+
+    def chance_to_hit(self, ac, advantage=False):
         chance_to_hit = (21 - (ac - self.to_hit))/20
         if chance_to_hit > 0.95:
             chance_to_hit = 0.95
@@ -123,25 +203,11 @@ class Attack:
 
         if advantage:
             chance_to_hit = 1 - (1-chance_to_hit)**2
-            crit_chance = 2*crit_chance
+        return chance_to_hit
 
-        expected_dmg = chance_to_hit * self.dmg
-        expected_dmg_w_crit = expected_dmg + self.expected_var_dmg*crit_chance*crit_modifier
-
-        if round_:
-            return round(expected_dmg_w_crit, 2)
-        else:
-            return expected_dmg_w_crit
-
-    def var_dmg(self, times, dices, reroll_ones=False):
-        if reroll_ones:
-            dont_reroll = ((dices-1)/dices) * ((2+dices)/2)
-            reroll = (1/dices) * ((1+dices)/2)
-            expected_dmg = reroll + dont_reroll
-        else:
-            expected_dmg = (1+dices)/2
-
-        return times * expected_dmg
+    def expected_damage_always_hit(self):
+        """For attacks like magic missile that can't crit"""
+        return self.total_var_dmg + self.con_dmg
 
 
 class Combat:
@@ -162,60 +228,10 @@ class Combat:
         print(f"Use {first} from ac {first_ac}+")
 
 
+
+
 if __name__ == '__main__':
     # simulate lvl 11 fighter
-    atk1 = Attack.from_string('+11 2d6+5')
-    atk2 = Attack.from_string('+6 2d6+15')
 
-    c = Combat()
-    c.find_breakpoint(atk1, atk2)
-
-    # simulate lvl 3 sorcerer
-    atk1 = Attack.from_string('+100 3d4+1')
-    atk2 = Attack.from_string('+6 3d8+0')
-    print('')
-    c.find_breakpoint(atk1, atk2)
-
-    # compare ranged with gfb battle smith
-    atk1 = Attack.from_string('+10 1d8+8')
-    atk2 = Attack.from_string('+5 1d8+18')
-
-    gfb_attack = Attack.from_string('+11 4d8+7')
-
-    print(f'expected dmg for bsmith wo ss: {atk1.expected_damage(ac=14)*2}')
-    print(f'expected dmg for bsmith w ss:  {atk2.expected_damage(ac=14)*2}')
-    print(f'expected dmg for bsmith w gfb: {gfb_attack.expected_damage(ac=17)}')
-
-    c.find_breakpoint(atk1, atk2, advantage=False)
-    print()
-
-    cbe_wo_ss = Attack.from_string('+10 1d6+4')
-    cbe_w_ss = Attack.from_string('+5 1d6+14')
-
-    # use better weapon
-    cbe_wo_ss = Attack.from_string('+11 1d6+5')
-    cbe_w_ss = Attack.from_string('+6 1d6+15')
-
-    lb_wo_ss = Attack.from_string('+12 1d8+8')
-    lb_w_ss = Attack.from_string('+7 1d8+18')
-
-    attacks = {
-        'Crossbow expert without sharpshooter:': cbe_wo_ss,
-        'Crossbow expert with sharpshooter:   ': cbe_w_ss,
-        'Longbow user without sharphooter:    ': lb_wo_ss,
-        'Longbow user with sharphooster:      ': lb_w_ss,
-    }
-    for ac in [13, 15, 17, 19]:
-        for atk in attacks:
-            edmg = attacks[atk].expected_damage(ac=ac)
-            if 'Crossbow' in atk:
-                edmg *= 3
-            else:
-                # without crossbow we use the bonus action to give advantage
-                edmg += attacks[atk].expected_damage(ac=ac, advantage=True)
-
-            print(f'expected dmg against ac {ac} for {atk}', round(edmg, 2))
-        print()
-
-
+    print(Attack.from_string('1d8 +10d7+1'))
 

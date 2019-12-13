@@ -1,25 +1,23 @@
 from flask_wtf import FlaskForm
 
 from wtforms import StringField, SubmitField, FieldList, FormField, BooleanField
-from wtforms.validators import DataRequired, Regexp
+from wtforms.validators import DataRequired, Regexp, ValidationError
+import lib
 
-
-class AttackForm(FlaskForm):
-    """Contact form."""
-    dmg_string1 = StringField(
-        label='Attack one',
-        validators=[DataRequired(), Regexp(regex=r'\+\d+ \d+d\d+\+\d+', message='Not in the form +4 1d8+2')]
-    )
-    dmg_string2 = StringField(
-        label='Attack two',
-        validators=[Regexp(regex=r'\+\d+ \d+d\d+\+\d+', message='Not in the form +4 1d8+2')]
-    )
-    submit = SubmitField('Submit')
+import lark
 
 
 class AttackEntryForm(FlaskForm):
-    attack = StringField(validators=[Regexp(regex=r'^([+-])(\d+) (\d+d\d+)(([+-])(\d+))?$', message='Invalid input')])
+    attack = StringField()
     advantage = BooleanField(label='advantage')
+
+    def validate_attack(form, field):
+        try:
+            lib.Attack.from_string(field.data)
+        except lark.exceptions.UnexpectedCharacters as larkerror:
+            raise ValidationError(str(larkerror))
+        except lark.exceptions.UnexpectedEOF as larkerror:
+            raise ValidationError(str(larkerror))
 
 
 class AttackForm2(FlaskForm):
