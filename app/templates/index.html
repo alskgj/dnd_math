@@ -1,72 +1,71 @@
-<!doctype html>
-<html>
+{% extends "base.html" %}
+{% block content %}
 
-<head>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-</head>
-
-<body>
-
-<div class="formwrapper">
+  <div class="container">
     <form method="POST" action="/">
-
-        <div class="form-field">
-            {{ form.dmg_string1.label }} {{ form.dmg_string1 }}
-            {% if form.dmg_string1.errors %}
-            <ul class="errors">
-                {% for error in form.dmg_string1.errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
+      <div class="row">
+        <div class="col-8">
+          {{ adder.hidden_tag() }}
+          {{ adder.add_submit }}
+          {{ adder.remove_submit }}
         </div>
 
-        <div class="form-field">{{ form.dmg_string2.label }} {{ form.dmg_string2 }}
-            {% if form.dmg_string2.errors %}
-            <ul class="errors">
-                {% for error in form.dmg_string2.errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-
-        {{ form.submit }}
+      </div>
     </form>
-</div>
+  </div>
 
-{% for id in ids %}
-  <h3>{{id}}</h3>
-  <div id="{{id}}"></div>
-{% endfor %}
+  <div class="container">
+    <div class="row">
+      <div class="col"> Damage string</div>
+      <div class="col"> Advantage</div>
+    </div>
 
-</body>
+    <form method="POST" action="/">
+      {{ form.hidden_tag() }}
+
+      {% for attack_entry_form in form.attacks %}
+        {{ attack_entry_form.hidden_tag() }}
+        <div class="row">
+
+          <div class="col-10">
+        {% for sub_attack in attack_entry_form.sub_attacks %}
+          {{ sub_attack.hidden_tag() }}
+
+            {{ sub_attack.attack }}
+            {% if sub_attack.attack.errors %}
+              {% for error in sub_attack.attack.errors %}
+                {{ error }}
+              {% endfor %}
+            {% endif %}
+            {{ sub_attack.advantage }}
+
+        {% endfor %}
+          </div>
+        <div class="col">
+          {{ attack_entry_form.add_subattack }}
+          {{ attack_entry_form.remove_subattack }}
+        </div>
+
+        </div>
+      {% endfor %}
+      <div class="row">
+        <div class="col"> {{ form.attack_submit }} </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        {% for id in ids %}
+          <div id="{{ id }}"></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 
 
-<footer>
-    <!-- D3.js -->
-    <script src="{{ url_for('static', filename='js/d3.min.js')}}"></script>
-    <!-- jQuery -->
-    <script src="{{ url_for('static', filename='js/jquery-2.1.4.min.js')}}"></script>
-    <!-- Plotly.js -->
-    <script src="{{ url_for('static', filename='js/plotly-latest.min.js')}}"></script>
 
-    <!-- bootstrap stuff -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-    <script type="text/javascript">
 
-        var graphs = {{graphJSON | safe}};
-        var ids = {{ids | safe}};
-
-        for(var i in graphs) {
-            Plotly.plot(ids[i], // the ID of the div, created above
-                        graphs[i].data,
-                        graphs[i].layout || {});
-        }
-
-    </script>
-</footer>
-
-</html>
+{% endblock %}

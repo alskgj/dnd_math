@@ -5,12 +5,14 @@ import json
 import plotly
 
 from lib import Attack
-from forms import AttackForm2, AddForms
+from forms import AttackForm, AddForms
 
 import typing
 import logging
+from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
+Bootstrap(app)
 app.debug = True
 
 SECRET_KEY = os.urandom(32)
@@ -31,22 +33,34 @@ class UserInput:
 
         self.advantage = data['advantage']
 
+    def __repr__(self):
+        return f'{self.attack} advantage: {self.advantage}'
+
 
 def setup_logging():
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 
-def make_graphjson(atks: typing.List[UserInput], name=None):
-    ac_range = range(34, 2, -1)
-    x = list(ac_range)
+def make_graphjson(atks: typing.List[typing.List[UserInput]]):
+    ac_range = list(range(34, 2, -1))
 
     data = list()
     for atk in atks:
-        name = str(atk.attack)
 
-        y = [atk.attack.expected_damage(i, advantage=atk.advantage) for i in x]
-        data.append({'x': x, 'y': y, 'type': 'scatter', 'name': name})
+        total_dmg = [0 for _ in ac_range]
+        for sub_attack in atk:
+            for i, ac in enumerate(ac_range):
+                total_dmg[i] += sub_attack.attack.expected_damage(ac, advantage=sub_attack.advantage)
+        name = 'placeholder'
+
+        data.append({'x': ac_range, 'y': total_dmg, 'type': 'scatter', 'name': name})
+
+    maxy = 0
+    for element in data:
+        for dmg in element['y']:
+            if dmg > maxy:
+                maxy = int(dmg)+1
 
     graphs = [
         {
@@ -54,7 +68,7 @@ def make_graphjson(atks: typing.List[UserInput], name=None):
             'layout': {
                 'title': 'Expected damage depending on enemy AC',
                 'xaxis': {'title': 'Enemy Armor Class', 'range': [10, 20]},
-                'yaxis': {'title': 'Expected damage'}
+                'yaxis': {'title': 'Expected damage', 'range': [0, maxy]}
             }
         },
     ]
@@ -71,38 +85,70 @@ def make_graphjson(atks: typing.List[UserInput], name=None):
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
-
     if 'atks' not in session:
-        session['atks'] = [{'attack': '+8 1d8+3', 'advantage': False, 'csrf_token': ''}]
-
-    attackform = AttackForm2(attacks=session["atks"])
+        session['atks'] = [
+            {'sub_attacks':
+                [{'attack': '3d4+1'},
+                 {'attack': '+4 3d8'}],
+             },
+            {'sub_attacks':
+                [{'attack': '+8 1d8+5'}],
+             }
+        ]
+    attackform = AttackForm(attacks=session["atks"])
     adderform = AddForms()
 
-    # add or remove buttons
+    # add or remove an attack row
     if adderform.validate_on_submit() and adderform.add_submit.data:
-        session['atks'] = session['atks'] + [session['atks'][0]]
-        return redirect(url_for('index'))
+        if len(session['atks']) < 4:
+            session['atks'] = session['atks'] + [session['atks'][0]]
+            session.modified = True
+            return redirect(url_for('index'))
+        else:
+            return redirect(url_for('index'))
     if adderform.validate_on_submit() and adderform.remove_submit.data:
         if len(session['atks']) > 1:
             session['atks'] = session['atks'][:-1]
+            session.modified = True
         return redirect(url_for('index'))
 
-    # generate graph
+    # add or remove an attack column
+    if attackform.validate_on_submit():
+        for i, atk in enumerate(attackform.attacks):
+            if atk.add_subattack.data:
+                if len(session['atks'][i]['sub_attacks']) < 4:
+                    session['atks'][i]['sub_attacks'] = \
+                        session['atks'][i]['sub_attacks'] + [session['atks'][i]['sub_attacks'][0]]
+
+                    session.modified = True
+                    return redirect(url_for('index'))
+
+            if atk.remove_subattack.data:
+                if len(session['atks'][i]['sub_attacks']) > 1:
+                    session['atks'][i]['sub_attacks'] = session['atks'][i]['sub_attacks'][:-1]
+
+                session.modified = True
+                return redirect(url_for('index'))
+
+    # display graph
     if attackform.validate_on_submit() and attackform.attack_submit.data:
         # persist old data
         session['atks'] = attackform.attacks.data
+        session.modified = True
 
         form_data = []
-        for i, entry in enumerate(attackform.attacks):
-            ui = UserInput(entry)
-            if ui.valid:
-                form_data.append(ui)
-
+        for entry in attackform.attacks:
+            current = []
+            for attack in entry.sub_attacks:
+                ui = UserInput(attack)
+                if ui.valid:
+                    current.append(ui)
+            form_data.append(current)
         ids, graphjson = make_graphjson(form_data)
 
-        return render_template('m.html', form=attackform, adder=adderform, ids=ids, graphJSON=graphjson)
+        return render_template('index.html', form=attackform, adder=adderform, ids=ids, graphJSON=graphjson)
 
-    return render_template('m.html', form=attackform, adder=adderform)
+    return render_template('index.html', form=attackform, adder=adderform)
 
 
 if __name__ == '__main__':

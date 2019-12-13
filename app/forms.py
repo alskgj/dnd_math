@@ -7,11 +7,11 @@ import lib
 import lark
 
 
-class AttackEntryForm(FlaskForm):
+class SubAttackEntryForm(FlaskForm):
     attack = StringField()
     advantage = BooleanField(label='advantage')
 
-    def validate_attack(form, field):
+    def validate_attack(self, field):
         try:
             lib.Attack.from_string(field.data)
         except lark.exceptions.UnexpectedCharacters as larkerror:
@@ -20,7 +20,13 @@ class AttackEntryForm(FlaskForm):
             raise ValidationError(str(larkerror))
 
 
-class AttackForm2(FlaskForm):
+class AttackEntryForm(FlaskForm):
+    sub_attacks = FieldList(FormField(SubAttackEntryForm), min_entries=1)
+    add_subattack = SubmitField('Add')
+    remove_subattack = SubmitField('Del')
+
+
+class AttackForm(FlaskForm):
     """A form for one or more attacks"""
     attacks = FieldList(FormField(AttackEntryForm), min_entries=1)
     attack_submit = SubmitField('Attack')

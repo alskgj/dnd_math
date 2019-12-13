@@ -1,67 +1,61 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <div class="container">
-        <form method="POST" action="/">
-            <div class="row">
-                <div class="col-8">
-                    {{ adder.hidden_tag() }}
-                    {{ adder.add_submit }}
-                    {{ adder.remove_submit }}
-                </div>
-
-            </div>
-        </form>
-    </div>
-
-    <div class="container">
-        <div class="row">
-            <div class="col-8"> Damage string</div>
-            <div class="col-4"> Advantage</div>
+  <div class="container">
+    <form method="POST" action="/">
+      <div class="row">
+        <div class="col-8">
+          {{ adder.hidden_tag() }}
+          {{ adder.add_submit }}
+          {{ adder.remove_submit }}
         </div>
+      </div>
+    </form>
+  </div>
 
-        <form method="POST" action="/">
-            {{ form.hidden_tag() }}
-            {% for attack_entry_form in form.attacks %}
-                <div class="row">
-
-                    <div class="col-8">
-                        {{ attack_entry_form.hidden_tag() }}
-                        {{ attack_entry_form.attack }}
-                        {% if attack_entry_form.attack.errors %}
-
-                                {% for error in attack_entry_form.attack.errors %}
-                                    {{ error }}
-                                {% endfor %}
-
-                        {% endif %}
-                    </div>
-
-                    <div class="col-4">
-                        {{ attack_entry_form.advantage }}
-                    </div>
-
-                </div>
-            {% endfor %}
-            <div class="row">
-                <div class="col-8"> {{ form.attack_submit }} </div>
-
-            </div>
-        </form>
+  <div class="container">
+    <div class="row">
+      <div class="col-8"> Damage string</div>
+      <div class="col-4"> Advantage</div>
     </div>
 
-    <div class="container-fluid">
+    <form method="POST" action="/">
+      {{ form.hidden_tag() }}
+      {% for attack_entry_form in form.attacks %}
         <div class="row">
-            <div class="col-12">
-                {% for id in ids %}
-                    <div id="{{ id }}"></div>
-                {% endfor %}
-            </div>
+
+          <div class="col">
+            {{ attack_entry_form.hidden_tag() }}
+            {{ attack_entry_form.attack }}
+            {% if attack_entry_form.attack.errors %}
+              {% for error in attack_entry_form.attack.errors %}
+                {{ error }}
+              {% endfor %}
+            {% endif %}
+            {{ attack_entry_form.advantage }}
+          </div>
+
+          <div class="col">
+            {{ attack_entry_form.add_subattack }}
+          </div>
+
         </div>
+      {% endfor %}
+      <div class="row">
+        <div class="col-8"> {{ form.attack_submit }} </div>
+
+      </div>
+    </form>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        {% for id in ids %}
+          <div id="{{ id }}"></div>
+        {% endfor %}
+      </div>
     </div>
-
-
-
-
+  </div>
 
 {% endblock %}

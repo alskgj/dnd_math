@@ -233,5 +233,5 @@ class Combat:
 if __name__ == '__main__':
     # simulate lvl 11 fighter
 
-    print(Attack.from_string('1d8 +10d7+1'))
+    print(Attack.from_string('1d8 +10d7+1 + 3d5'))
 
