@@ -1,50 +1,36 @@
-original:
-=========
-<div class="form-row">
-      
-	  <div class="form-group "><label class="control-label" for="attacks-0-sub_attacks-0-attack">Attack</label>
-        	  <input class="form-control" id="attacks-0-sub_attacks-0-attack" name="attacks-0-sub_attacks-0-attack" type="text" value="3d4+1">
-	  </div>
+possible modifiers
+==================
 
-	  <div class="form-group "><label class="control-label" for="attacks-0-sub_attacks-1-attack">Attack</label>
-        	  <input class="form-control" id="attacks-0-sub_attacks-1-attack" name="attacks-0-sub_attacks-1-attack" type="text" value="+4 3d8">
-	  </div>
+## +hit chance
 
-</div>
++10 1d8 +3  -> +10 to hit against AC, 1d8+3 dmg on hit
 
-proposed:
-========
+## advantage / disadvantage / elven accuracy
+advantage +10 1d8 +3      == a +10 1d8 + 3
+disadvantage +10 1d8 + 3  == d +10 1d8 + 3
 
-<div class="form-row">
-      
-	  <div class="form-group col-md-6">
-        	  <input class="form-control" id="attacks-0-sub_attacks-0-attack" name="attacks-0-sub_attacks-0-attack" type="text" value="3d4+1">
-	  </div>
+## crit on 19 and 20
++10 1d8 +3 (c:19)
 
-	  <div class="form-group col-md-6">
-        	  <input class="form-control" id="attacks-0-sub_attacks-1-attack" name="attacks-0-sub_attacks-1-attack" type="text" value="+4 3d8">
-	  </div>
+## crit on 19 and 20, attack with advantage
+a +10 1d8 +3 (c:19)
 
-</div>
+## reroll ones
++10 2d8 + 2d6 + 3 (rr:1)   -> reroll all ones in all four dice rolls
++10 2d8 (rr:1) + 2d6 + 3   -> reroll all ones in the two d8 rolled
 
++10 2d8 + 2d6 + 3 (rr:3/1)   -> reroll up to three ones in all four dice rolls
++10 2d8 (rr:1/1) + 2d6 + 3   -> reroll up to one one in the two d8 rolled
 
+## (half|no) damage on save, (always hits|against ac)
+--> display ac [10-20], saving_throw [-5, 15] as x axis
 
-bootstrap:
-==========
+- fireball: 3d8 dmg, con save, we have +5 spell atk, always hits, half damage on save
+3d8 (s:+5,half)
 
-  <div class="form-row">
-    <div class="form-group col-md-6">
-      <label for="inputEmail4">Email</label>
-      <input type="email" class="form-control" id="inputEmail4" placeholder="Email">
-    </div>
-    <div class="form-group col-md-6">
-      <label for="inputPassword4">Password</label>
-      <input type="password" class="form-control" id="inputPassword4" placeholder="Password">
-    </div>
-  </div>
+- fireball, but no dmg on save
+3d8 (s:+5,no)
 
-
-button:
-=======
-was: <input class="btn btn-primary" id="attack_submit" name="attack_submit" type="submit" value="Attack">
-from: {{ wtf.form_field(form.attack_submit, class="btn btn-primary") }}
+--> requires 3d plot, damage depends on both ac and save
+- fireball, but we must make a ranged spell attack with our +3 to hit, and target can still save for half dmg
++3 3d8 (s:+5,half)

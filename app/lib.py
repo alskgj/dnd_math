@@ -68,11 +68,12 @@ class Attack:
 
 
     """
-    def __init__(self, to_hit: typing.Union[None, int], var_dmg: typing.List[VarDmg], con_dmg=0):
+    def __init__(self, to_hit: typing.Union[None, int], var_dmg: typing.List[VarDmg], con_dmg=0, advantage=False):
 
         self.to_hit = to_hit
         self.var_dmg = var_dmg
         self.con_dmg = con_dmg
+        self.advantage = advantage
 
     def __str__(self):
         """Short version string for endusers"""
@@ -126,8 +127,13 @@ class Attack:
         lark = Lark(syntax)
         line = lark.parse(atk_string).children[0]
 
-        to_hit, var_dmg, con_dmg = None, [], 0
+        to_hit, var_dmg, con_dmg, advantage = None, [], 0, False
         for t in line.children:
+            if t.data == 'mod':
+                if t.children[0].type == 'ADVANTAGE':
+                    advantage = True
+                elif t.children[0].type == 'DISADVANTAGE':
+                    logging.error("Disadvantage is not implemented")
             if t.data == 'tohit':
                 multiplier = 1
                 for child in t.children:
@@ -154,7 +160,7 @@ class Attack:
                     number, die = int(kids[0].value), int(kids[2].value)
                 var_dmg.append(VarDmg(number, die, sign))
 
-        return cls(to_hit, var_dmg, con_dmg)
+        return cls(to_hit, var_dmg, con_dmg, advantage)
 
     def expected_damage(self, ac, crit_chance=0.05, advantage=False, round_=True):
         """

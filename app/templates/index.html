@@ -1,59 +1,52 @@
 {% extends "base.html" %}
+
+{% block title %}
+  DNDcalc
+{% endblock %}
+
 {% block content %}
 
   <div class="container">
-    <form method="POST" action="/">
-      <div class="row">
-        <div class="col-8">
-          {{ adder.hidden_tag() }}
-          {{ adder.add_submit }}
-          {{ adder.remove_submit }}
-        </div>
+    <form method="POST">
 
-      </div>
-    </form>
-  </div>
-
-  <div class="container">
-    <div class="row">
-      <div class="col"> Damage string</div>
-      <div class="col"> Advantage</div>
-    </div>
-
-    <form method="POST" action="/">
       {{ form.hidden_tag() }}
+      {% for attack in form.attacks %}
+        {{ attack.hidden_tag() }}
+        <div class="form-row">
+          {% for sub_attack in attack.sub_attacks %}
+            <div class="col">
+              {{ sub_attack.hidden_tag() }}
 
-      {% for attack_entry_form in form.attacks %}
-        {{ attack_entry_form.hidden_tag() }}
-        <div class="row">
+              {% if sub_attack.attack.errors %}
+                <input class="form-control is-invalid" id="{{ sub_attack.attack.id }}"
+                       name="{{ sub_attack.attack.name }}"
+                       type="text" value="{{ sub_attack.attack.data }}">
+              {% else %}
+                <input class="form-control" id="{{ sub_attack.attack.id }}" name="{{ sub_attack.attack.name }}"
+                       type="text" value="{{ sub_attack.attack.data }}">
+              {% endif %}
 
-          <div class="col-10">
-        {% for sub_attack in attack_entry_form.sub_attacks %}
-          {{ sub_attack.hidden_tag() }}
+              {% if sub_attack.attack.errors %}
+                <div class="invalid-feedback">
+                  {{ sub_attack.attack.errors[0] }}
+                </div>
+              {% endif %}
 
-            {{ sub_attack.attack }}
-            {% if sub_attack.attack.errors %}
-              {% for error in sub_attack.attack.errors %}
-                {{ error }}
-              {% endfor %}
-            {% endif %}
-            {{ sub_attack.advantage }}
-
-        {% endfor %}
+            </div>
+          {% endfor %}
+          <div class="col">
+            <input class="btn btn-outline-danger" id="mybuttonm" name="mybutton" type="button" value="-">
+            <input class="btn btn-outline-success" id="mybuttonp1" name="mybutton1" type="button" value="+">
           </div>
-        <div class="col">
-          {{ attack_entry_form.add_subattack }}
-          {{ attack_entry_form.remove_subattack }}
-        </div>
-
         </div>
       {% endfor %}
-      <div class="row">
-        <div class="col"> {{ form.attack_submit }} </div>
-      </div>
+      {{ form.attack_submit(class_="btn btn-primary") }}
+
     </form>
   </div>
 
+
+  <!-- graph -->
   <div class="container-fluid">
     <div class="row">
       <div class="col-12">
@@ -66,6 +59,69 @@
 
 
 
-
-
 {% endblock %}
+
+{% block scripts %}
+  <script>
+
+      // script to make the - buttons actually remove subattacks
+      $("input[value='-']").click(function () {
+          // go to parent form-row, then iterate over form-controls in that row
+          let fields = $($(this).closest("div.form-row")).find("input.form-control");
+          if (fields.length > 1) {
+              fields.each(function () {
+              });
+              fields[fields.length - 1].closest("div").remove();
+          } else {
+          }
+      });
+
+      // todo ensure csrf gets copied -> one less button press
+
+      // we always need the second last col, the last one are the buttons
+      // let cols = $(first.closest("div.form-row")).find("div.col");
+      // let tcols = cols[cols.length-2];
+      // script to make the + buttons add subattacks
+      $("input[value='+']").click(function () {
+          // go to parent form-row, then iterate over form-controls in that row
+          let old_field = $($(this).closest("div.form-row")).find("input.form-control:last");
+          let field = old_field.clone(true, true);
+
+          let new_sid = parseInt(old_field[0].id.match(/sub_attacks-(\d+)/)[1]) + 1;
+          field[0].id = old_field[0].id.replace(/sub_attacks-(\d+)/, "sub_attacks-" + new_sid);
+          field[0].name = field[0].id;
+
+          let cols = $($(this).closest("div.form-row")).find("div.col");
+          if (cols.length < 5) {
+              let tcols = cols[cols.length - 2];
+
+              // build the parent <div class=col> field
+              let parent = document.createElement("div");
+              parent.className = "col";
+
+              // build the csrf entry
+              let old_csrf = $(old_field.siblings()[0]);
+              let newinp = old_csrf.clone(true, true);
+              newinp[0].id = newinp[0].id.replace(/sub_attacks-(\d+)/, "sub_attacks-" + new_sid);
+              newinp[0].name = newinp[0].id;
+
+              parent.appendChild(newinp[0]);
+              parent.appendChild(field[0]);
+
+              tcols.after(parent);
+              field.show();
+          }
+      });
+
+      var graphs = {{graphJSON | safe}};
+      var ids = {{ids | safe}};
+      for (var i in graphs) {
+          Plotly.plot(ids[i], // the ID of the div, created above
+              graphs[i].data,
+              graphs[i].layout || {});
+      }
+
+  </script>
+{% endblock %}
+
+

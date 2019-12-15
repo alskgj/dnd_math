@@ -1,10 +1,13 @@
 start: line
 
-line                : (tohit)? (vardmg | condmg)+
+line                : mod? (tohit)? (vardmg | condmg)+
 tohit               : SIGN NUMBER WHITESPACE
 vardmg              : SIGN? NUMBER D NUMBER
 condmg              : SIGN? NUMBER
+mod                 : (ADVANTAGE | DISADVANTAGE)
 
+ADVANTAGE           : ("advantage"|"a")
+DISADVANTAGE        : ("disadvantage"|"d")
 NUMBER              : ("0".."9")+
 SIGN                : ("+"|"-")
 D                   : "d"
