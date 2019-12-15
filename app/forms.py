@@ -22,8 +22,8 @@ class SubAttackEntryForm(FlaskForm):
 
 class AttackEntryForm(FlaskForm):
     sub_attacks = FieldList(FormField(SubAttackEntryForm), min_entries=1)
-    add_subattack = SubmitField('Add')
-    remove_subattack = SubmitField('Del')
+    add_subattack = SubmitField('+')
+    remove_subattack = SubmitField('-')
 
 
 class AttackForm(FlaskForm):

@@ -9,10 +9,9 @@ from forms import AttackForm, AddForms
 
 import typing
 import logging
-from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
-Bootstrap(app)
+app
 app.debug = True
 
 SECRET_KEY = os.urandom(32)
@@ -149,6 +148,27 @@ def index():
         return render_template('index.html', form=attackform, adder=adderform, ids=ids, graphJSON=graphjson)
 
     return render_template('index.html', form=attackform, adder=adderform)
+
+
+@app.route('/test', methods=('GET', 'POST'))
+def test():
+    if 'atks' not in session:
+        session['atks'] = [
+            {'sub_attacks':
+                [{'attack': '3d4+1'},
+                 {'attack': '+4 3d8'},
+                 {'attack': '+1 3d8'},
+                 ],
+             },
+            {'sub_attacks':
+                [{'attack': '+8 1d8+5'}],
+             }
+        ]
+    attackform = AttackForm(attacks=session["atks"])
+
+    return render_template('m.html', form=attackform)
+
+
 
 
 if __name__ == '__main__':

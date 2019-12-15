@@ -2,43 +2,30 @@
 <html lang="en">
 
 <head>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>dnd calc</title>
+  <!-- Bootstrap - Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+  <title>{% block title %} {% endblock %}</title>
 </head>
 
 <body>
-    <h2>A dnd 5e calculator</h2>
-    {% block content %}{% endblock %}
+  <h2>A dnd 5e calculator</h2>
+  {% block content %}{% endblock %}
+
+  <!-- D3.js -->
+  <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+  <!-- Plotly.js -->
+  <script src="{{ url_for('static', filename='js/plotly-latest.min.js') }}"></script>
+  <!-- jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery-2.1.4.min.js')}}"></script>
+  <!-- Bootstrap -->
+  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+
+{% block scripts %} {% endblock %}
 
 </body>
-
-
-<footer>
-    <!-- D3.js -->
-    <script src="{{ url_for('static', filename='js/d3.min.js')}}"></script>
-    <!-- jQuery -->
-    <script src="{{ url_for('static', filename='js/jquery-2.1.4.min.js')}}"></script>
-    <!-- Plotly.js -->
-    <script src="{{ url_for('static', filename='js/plotly-latest.min.js')}}"></script>
-
-    <!-- bootstrap stuff -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-
-    <script type="text/javascript">
-
-        var graphs = {{graphJSON | safe}};
-        var ids = {{ids | safe}};
-
-        for(var i in graphs) {
-
-            Plotly.plot(ids[i], // the ID of the div, created above
-                        graphs[i].data,
-                        graphs[i].layout || {});
-        }
-
-    </script>
-</footer>
-
 </html>

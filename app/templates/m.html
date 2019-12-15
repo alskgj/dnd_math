@@ -1,61 +1,109 @@
 {% extends "base.html" %}
+
+{% block title %}
+  DNDcalc
+{% endblock %}
+
 {% block content %}
 
   <div class="container">
-    <form method="POST" action="/">
-      <div class="row">
-        <div class="col-8">
-          {{ adder.hidden_tag() }}
-          {{ adder.add_submit }}
-          {{ adder.remove_submit }}
-        </div>
-      </div>
-    </form>
-  </div>
+    <form method="POST">
 
-  <div class="container">
-    <div class="row">
-      <div class="col-8"> Damage string</div>
-      <div class="col-4"> Advantage</div>
-    </div>
+      {{ form.csrf_token }}
 
-    <form method="POST" action="/">
-      {{ form.hidden_tag() }}
-      {% for attack_entry_form in form.attacks %}
-        <div class="row">
-
+      {% for attack in form.attacks %}
+        <div class="form-row">
+          {% for sub_attack in attack.sub_attacks %}
+            <div class="col">
+              <input class="form-control" id="{{ sub_attack.attack.id }}" name="{{ sub_attack.attack.name }}"
+                     type="text" value="{{ sub_attack.attack.data }}">
+            </div>
+          {% endfor %}
           <div class="col">
-            {{ attack_entry_form.hidden_tag() }}
-            {{ attack_entry_form.attack }}
-            {% if attack_entry_form.attack.errors %}
-              {% for error in attack_entry_form.attack.errors %}
-                {{ error }}
-              {% endfor %}
-            {% endif %}
-            {{ attack_entry_form.advantage }}
+            <input class="btn btn-outline-dark" id="mybuttonm" name="mybutton" type="button" value="-">
+            <input class="btn btn-outline-success" id="mybuttonp" name="mybutton" type="button" value="+">
+            <input class="btn btn-success" id="mybuttonp1" name="mybutton1" type="button" value="=">
           </div>
-
-          <div class="col">
-            {{ attack_entry_form.add_subattack }}
-          </div>
-
         </div>
       {% endfor %}
-      <div class="row">
-        <div class="col-8"> {{ form.attack_submit }} </div>
+      {{ form.attack_submit(class_="btn btn-primary") }}
 
-      </div>
+
     </form>
   </div>
 
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
-        {% for id in ids %}
-          <div id="{{ id }}"></div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
 
 {% endblock %}
+
+{% block scripts %}
+  <script>
+
+      // script to make the - buttons actually remove subattacks
+      $("input[value='-']").click(function () {
+          // go to parent form-row, then iterate over form-controls in that row
+          let fields = $($(this).closest("div.form-row")).find("input.form-control");
+          if (fields.length > 1) {
+              fields.each(function () {
+                  console.log("field: " + this.name);
+              });
+              fields[fields.length - 1].remove();
+          } else {
+              console.log("only one field :(");
+          }
+      });
+
+      // let first = $("input[value='+']")[0];
+      // let inps = $(first.closest("div.form-row")).find("input.form-control");
+      // let target = $(first.closest("div.form-row")).find("input.form-control:last");
+      // let ntarget = target.clone(true, true);
+
+      // we always need the second last col, the last one are the buttons
+      // let cols = $(first.closest("div.form-row")).find("div.col");
+      // let tcols = cols[cols.length-2];
+
+
+      // script to make the + buttons add subattacks
+      $("input[value='+']").click(function () {
+          // go to parent form-row, then iterate over form-controls in that row
+          let old_field = $($(this).closest("div.form-row")).find("input.form-control:last");
+          let field = old_field.clone(true, true);
+
+          console.log("old id: " + old_field[0].id);
+          let new_sid = parseInt(old_field[0].id.match(/sub_attacks-(\d+)/)[1]) + 1;
+          field[0].id = old_field[0].id.replace(/sub_attacks-(\d+)/, "sub_attacks-"+new_sid);
+          field[0].name = field[0].id;
+          console.log("new id: " + field[0].id);
+          old_field.after(field);
+          field.show();
+
+      });
+
+      // script to make the + buttons add subattacks
+      $("input[value='=']").click(function () {
+          // go to parent form-row, then iterate over form-controls in that row
+          let old_field = $($(this).closest("div.form-row")).find("input.form-control:last");
+          let field = old_field.clone(true, true);
+
+          console.log("old id: " + old_field[0].id);
+          let new_sid = parseInt(old_field[0].id.match(/sub_attacks-(\d+)/)[1]) + 1;
+          field[0].id = old_field[0].id.replace(/sub_attacks-(\d+)/, "sub_attacks-"+new_sid);
+          field[0].name = field[0].id;
+          console.log("new id: " + field[0].id);
+
+
+          let cols = $($(this).closest("div.form-row")).find("div.col");
+          let tcols = cols[cols.length-2];
+          let parent = document.createElement("div");
+          parent.className = "col";
+          parent.appendChild(field[0]);
+
+          tcols.after(parent);
+          field.show();
+
+      });
+
+
+  </script>
+{% endblock %}
+
+
