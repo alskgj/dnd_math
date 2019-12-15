@@ -7,12 +7,20 @@
 {% block content %}
 
   <div class="container">
+
+  <div class="form-row">
+    <div class="col">
+      <input class="btn btn-outline-danger" id="attack-remover" name="attack-remover" type="button" value="Remove Attack">
+      <input class="btn btn-outline-success" id="attack-adder" name="attack-adder" type="button" value="Add Attack">
+    </div>
+  </div>
+
     <form method="POST">
 
       {{ form.hidden_tag() }}
       {% for attack in form.attacks %}
-        {{ attack.hidden_tag() }}
-        <div class="form-row">
+        <div ctype="dynamic" class="form-row">
+          {{ attack.hidden_tag() }}
           {% for sub_attack in attack.sub_attacks %}
             <div class="col">
               {{ sub_attack.hidden_tag() }}
@@ -76,8 +84,6 @@
           }
       });
 
-      // todo ensure csrf gets copied -> one less button press
-
       // we always need the second last col, the last one are the buttons
       // let cols = $(first.closest("div.form-row")).find("div.col");
       // let tcols = cols[cols.length-2];
@@ -113,6 +119,39 @@
           }
       });
 
+      // remove an attack row
+      // attack-remover
+      $("input[id=attack-remover]").click(function () {
+          if ($("div[ctype=dynamic]").length >= 2) {
+            $("div[ctype=dynamic]:last")[0].remove();
+          }
+      });
+
+      // add an attack row
+      $("input[id=attack-adder]").click(function () {
+          if ($("div[ctype=dynamic]").length > 6) {
+            return;
+          }
+        let oldrow = $("div[ctype=dynamic]:last");
+        let row = oldrow.clone(true, true);
+
+        // get old id
+          // take any inputfield and extract its id
+          let new_id = parseInt($(oldrow[0]).find("input")[0].id.match(/attacks-(\d+)/)[1])+1;
+          // replace appicable stuff with new id
+          // row.find("input").each((index, element) => console.log(element.id));
+          row.find("input").each(function(index, element) {
+              element.id = element.id.replace(/attacks-(\d+)/, "attacks-" + new_id);
+              element.name = element.name.replace(/attacks-(\d+)/, "attacks-" + new_id);
+          });
+
+          oldrow.after(row);
+
+          // place new row after old row
+        console.log('hi');
+      });
+
+      {% if graphJSON and ids %}
       var graphs = {{graphJSON | safe}};
       var ids = {{ids | safe}};
       for (var i in graphs) {
@@ -120,6 +159,7 @@
               graphs[i].data,
               graphs[i].layout || {});
       }
+      {% endif %}
 
   </script>
 {% endblock %}

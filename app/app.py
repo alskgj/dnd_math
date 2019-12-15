@@ -18,7 +18,6 @@ app.debug = True
 SECRET_KEY = os.urandom(32)
 app.config['SECRET_KEY'] = SECRET_KEY
 
-# TODO - restore possibilities of multiple rows
 # TODO - remove UserInput class
 # TODO - replace the 'placeholde' name with something better
 
