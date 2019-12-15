@@ -20,6 +20,8 @@ app.config['SECRET_KEY'] = SECRET_KEY
 
 # TODO - remove UserInput class
 # TODO - replace the 'placeholde' name with something better
+# TODO - write syntax section
+
 
 class UserInput:
     def __init__(self, form: FlaskForm):
@@ -41,7 +43,7 @@ class UserInput:
 
 def setup_logging():
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("werkzeug").setLevel(logging.WARNING)
+    logging.getLogger("werkzeug").setLevel(logging.INFO)
 
 
 def make_graphjson(atks: typing.List[typing.List[UserInput]]):
@@ -110,6 +112,7 @@ def index():
                 ui = UserInput(attack)
                 if ui.valid:
                     current.append(ui)
+                    logging.info("got %s", ui.attack)
             form_data.append(current)
         ids, graphjson = make_graphjson(form_data)
         return render_template('index.html', form=attackform, ids=ids, graphJSON=graphjson)
