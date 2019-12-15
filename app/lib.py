@@ -14,11 +14,12 @@ dmg = a.expected_dmg(ac=15, reroll_ones=True)
 
 """
 # standard library
-import re
 import logging
 import typing
 
 from config import Config
+from base64 import urlsafe_b64encode, urlsafe_b64decode
+import json
 
 # third party
 from lark import Lark
@@ -234,6 +235,19 @@ class Combat:
         print(f"Use {first} from ac {first_ac}+")
 
 
+def form_encode(arg: dict):
+    """Takes an attack and returns its b64 representation"""
+    # ensure we only take valid keys
+    new_attacks = []
+    for attack in arg[:5]:
+        new_subattacks = []
+        for sub_attack in attack['sub_attacks'][:5]:
+            new_subattacks.append({'attack': sub_attack['attack']})
+        new_attacks.append({'sub_attacks': new_subattacks})
+    return urlsafe_b64encode(json.dumps(new_attacks).encode()).decode()
+
+def form_decode(arg: str):
+    return json.loads(urlsafe_b64decode(arg).decode())
 
 
 if __name__ == '__main__':

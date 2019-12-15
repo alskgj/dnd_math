@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for
+from flask import Flask, render_template, session, redirect, url_for, request
 import os
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
@@ -7,10 +7,10 @@ import plotly
 
 from lib import Attack
 from forms import AttackForm, AddForms
-
+import binascii
 import typing
 import logging
-from pprint import pprint
+from lib import form_encode, form_decode
 
 app = Flask(__name__)
 app.debug = True
@@ -70,8 +70,9 @@ def make_graphjson(atks: typing.List[typing.List[UserInput]]):
         {
             'data': data,
             'layout': {
+                'height': 600,
                 'title': 'Expected damage depending on enemy AC',
-                'xaxis': {'title': 'Enemy Armor Class', 'range': [10, 20]},
+                'xaxis': {'title': 'Enemy Armor Class', 'range': [5, 25]},
                 'yaxis': {'title': 'Expected damage', 'range': [0, maxy]}
             }
         },
@@ -85,6 +86,24 @@ def make_graphjson(atks: typing.List[typing.List[UserInput]]):
     graphjson= json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
 
     return ids, graphjson
+
+
+@app.route('/short/<arg>', methods=('GET', 'POST'))
+def short(arg):
+    new_attacks = []
+    try:
+        ui = form_decode(arg)
+    except binascii.Error:
+        return redirect("/")
+
+    # ensure we only take valid keys
+    for attack in ui[:5]:
+        new_subattacks = []
+        for sub_attack in attack['sub_attacks'][:5]:
+            new_subattacks.append({'attack': sub_attack['attack']})
+        new_attacks.append({'sub_attacks': new_subattacks})
+
+    return render_template('index.html', form=AttackForm(attacks=new_attacks))
 
 
 @app.route('/', methods=('GET', 'POST'))
@@ -115,7 +134,8 @@ def index():
                     logging.info("got %s", ui.attack)
             form_data.append(current)
         ids, graphjson = make_graphjson(form_data)
-        return render_template('index.html', form=attackform, ids=ids, graphJSON=graphjson)
+        return render_template('index.html', form=attackform, ids=ids, graphJSON=graphjson,
+                               sharelink=form_encode(attackform.attacks.data))
 
     return render_template('index.html', form=attackform)
 

@@ -8,14 +8,15 @@
 
   <div class="container">
 
-  <div class="form-row">
-    <div class="col">
-      <input class="btn btn-outline-danger" id="attack-remover" name="attack-remover" type="button" value="Remove Attack">
-      <input class="btn btn-outline-success" id="attack-adder" name="attack-adder" type="button" value="Add Attack">
+    <div class="form-row">
+      <div class="col">
+        <input class="btn btn-outline-danger" id="attack-remover" name="attack-remover" type="button"
+               value="Remove Attack">
+        <input class="btn btn-outline-success" id="attack-adder" name="attack-adder" type="button" value="Add Attack">
+      </div>
     </div>
-  </div>
 
-    <form method="POST">
+    <form method="POST" action="/">
 
       {{ form.hidden_tag() }}
       {% for attack in form.attacks %}
@@ -65,6 +66,42 @@
     </div>
   </div>
 
+
+  {% if sharelink %}
+    <!-- Button trigger modal -->
+    <div class="container">
+      <div class="row">
+        <button type="button" class="btn btn-dark" data-toggle="modal" data-target="#exampleModalLong">
+          share graph
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal to share sharelink -->
+    <div class="container">
+      <div class="row">
+        <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="Share this graph"
+             aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="Share this graph">This is your graph</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="scroll-box">{{ url_for("short", arg=sharelink, _external=True) }}</div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 
 
 {% endblock %}
@@ -123,24 +160,24 @@
       // attack-remover
       $("input[id=attack-remover]").click(function () {
           if ($("div[ctype=dynamic]").length >= 2) {
-            $("div[ctype=dynamic]:last")[0].remove();
+              $("div[ctype=dynamic]:last")[0].remove();
           }
       });
 
       // add an attack row
       $("input[id=attack-adder]").click(function () {
           if ($("div[ctype=dynamic]").length > 6) {
-            return;
+              return;
           }
-        let oldrow = $("div[ctype=dynamic]:last");
-        let row = oldrow.clone(true, true);
+          let oldrow = $("div[ctype=dynamic]:last");
+          let row = oldrow.clone(true, true);
 
-        // get old id
+          // get old id
           // take any inputfield and extract its id
-          let new_id = parseInt($(oldrow[0]).find("input")[0].id.match(/attacks-(\d+)/)[1])+1;
+          let new_id = parseInt($(oldrow[0]).find("input")[0].id.match(/attacks-(\d+)/)[1]) + 1;
           // replace appicable stuff with new id
           // row.find("input").each((index, element) => console.log(element.id));
-          row.find("input").each(function(index, element) {
+          row.find("input").each(function (index, element) {
               element.id = element.id.replace(/attacks-(\d+)/, "attacks-" + new_id);
               element.name = element.name.replace(/attacks-(\d+)/, "attacks-" + new_id);
           });
@@ -148,17 +185,17 @@
           oldrow.after(row);
 
           // place new row after old row
-        console.log('hi');
+          console.log('hi');
       });
 
       {% if graphJSON and ids %}
-      var graphs = {{graphJSON | safe}};
-      var ids = {{ids | safe}};
-      for (var i in graphs) {
-          Plotly.plot(ids[i], // the ID of the div, created above
-              graphs[i].data,
-              graphs[i].layout || {});
-      }
+          var graphs = {{graphJSON | safe}};
+          var ids = {{ids | safe}};
+          for (var i in graphs) {
+              Plotly.plot(ids[i], // the ID of the div, created above
+                  graphs[i].data,
+                  graphs[i].layout || {});
+          }
       {% endif %}
 
   </script>
