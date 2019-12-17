@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}
+  DNDcalc
+{% endblock %}
+
+{% block content %}
+
+  {% for example in tada %}
+    <div class="container">
+      <div class="container">
+        <div class="row">
+
+          <div class="custom-area">
+
+            <button class="btn btn-outline-primary" type="button" data-toggle="collapse"
+                    data-target="#collapse-{{ loop.index }}"
+                    aria-expanded="false" aria-controls="collapse-{{ loop.index }}">
+              {{ example.name }}
+            </button>
+
+            {% if example.notes %}
+              <button class="btn btn-outline-secondary" type="button" data-toggle="collapse"
+                      data-target="#collapse-notes-{{ loop.index }}"
+                      aria-expanded="false" aria-controls="collapse-notes-{{ loop.index }}">
+                Show description
+              </button>
+
+
+            <div class="collapse" id="collapse-notes-{{ loop.index }}">
+              <div class="card card-body">
+                {{ example.notes }}
+              </div>
+            </div>
+            {% endif %}
+
+
+            <div class="collapse" id="collapse-{{ loop.index }}">
+              <div class="card card-body">
+                <a href="{{ example.url }}">{{ example.name }}</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+
+
+
+  {% endfor %}
+
+
+{% endblock %}

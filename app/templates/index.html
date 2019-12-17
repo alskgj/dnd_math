@@ -9,11 +9,13 @@
   <div class="container">
 
     <div class="form-row">
+      <div class="custom-area">
       <div class="col">
         <input class="btn btn-outline-danger" id="attack-remover" name="attack-remover" type="button"
                value="Remove Attack">
         <input class="btn btn-outline-success" id="attack-adder" name="attack-adder" type="button" value="Add Attack">
       </div>
+    </div>
     </div>
 
     <form method="POST" action="/">
@@ -49,7 +51,8 @@
           </div>
         </div>
       {% endfor %}
-      {{ form.attack_submit(class_="btn btn-primary") }}
+
+      <div class="custom-area">{{ form.attack_submit(class_="btn btn-primary") }}</div>
 
     </form>
   </div>

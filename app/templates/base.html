@@ -15,17 +15,41 @@
 </head>
 
 <body>
-  <h2>A dnd 5e calculator</h2>
-  {% block content %}{% endblock %}
 
-  <!-- D3.js -->
-  <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
-  <!-- Plotly.js -->
-  <script src="{{ url_for('static', filename='js/plotly-latest.min.js') }}"></script>
-  <!-- jQuery -->
-    <script src="{{ url_for('static', filename='js/jquery-2.1.4.min.js')}}"></script>
-  <!-- Bootstrap -->
-  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+<nav class="navbar-expand navbar-dark bg-dark">
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <a class="navbar-brand" href={{ url_for("index") }}>A dnd 5e calculator</a>
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        {% if request.endpoint == "index" %}
+          <a class="nav-link active" href={{ url_for("index") }}>Home</a>
+        {% else %}
+          <a class="nav-link" href={{ url_for("index") }}>Home</a>
+        {% endif %}
+      </li>
+      <li class="nav-item">
+        {% if request.endpoint == "examples" %}
+          <a class="nav-link active" href={{ url_for("examples") }}>Examples</a>
+        {% else %}
+          <a class="nav-link" href={{ url_for("examples") }}>Examples</a>
+        {% endif %}
+
+      </li>
+    </ul>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<!-- D3.js -->
+<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+<!-- Plotly.js -->
+<script src="{{ url_for('static', filename='js/plotly-latest.min.js') }}"></script>
+<!-- jQuery -->
+<script src="{{ url_for('static', filename='js/jquery-2.1.4.min.js') }}"></script>
+<!-- Bootstrap -->
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 
 {% block scripts %} {% endblock %}
 

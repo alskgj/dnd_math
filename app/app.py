@@ -11,6 +11,7 @@ import binascii
 import typing
 import logging
 from lib import form_encode, form_decode
+import data
 
 app = Flask(__name__)
 app.debug = True
@@ -23,30 +24,12 @@ app.config['SECRET_KEY'] = SECRET_KEY
 # TODO - write syntax section
 
 
-class UserInput:
-    def __init__(self, form: FlaskForm):
-        """Takes a form and extracts the information"""
-        data = form.data
-
-        try:
-            self.attack = Attack.from_string(data['attack'])
-        except ValueError:
-            self.valid = False
-        else:
-            self.valid = True
-
-        self.advantage = data['advantage']
-
-    def __repr__(self):
-        return f'{self.attack} advantage: {self.advantage}'
-
-
 def setup_logging():
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("werkzeug").setLevel(logging.INFO)
 
 
-def make_graphjson(atks: typing.List[typing.List[UserInput]]):
+def make_graphjson(atks: typing.List[typing.List[Attack]]):
     ac_range = list(range(34, 2, -1))
 
     data = list()
@@ -55,9 +38,9 @@ def make_graphjson(atks: typing.List[typing.List[UserInput]]):
         total_dmg = [0 for _ in ac_range]
         for sub_attack in atk:
             for i, ac in enumerate(ac_range):
-                total_dmg[i] += sub_attack.attack.expected_damage(ac, advantage=sub_attack.attack.advantage)
-        name = 'placeholder'
+                total_dmg[i] += sub_attack.expected_damage(ac, advantage=sub_attack.advantage)
 
+        name = " and ".join([str(a) for a in atk])
         data.append({'x': ac_range, 'y': total_dmg, 'type': 'scatter', 'name': name})
 
     maxy = 0
@@ -73,7 +56,8 @@ def make_graphjson(atks: typing.List[typing.List[UserInput]]):
                 'height': 600,
                 'title': 'Expected damage depending on enemy AC',
                 'xaxis': {'title': 'Enemy Armor Class', 'range': [5, 25]},
-                'yaxis': {'title': 'Expected damage', 'range': [0, maxy]}
+                'yaxis': {'title': 'Expected damage', 'range': [0, maxy]},
+                'legend': {'orientation': 'h'}
             }
         },
     ]
@@ -111,13 +95,10 @@ def index():
     if 'atks' not in session:
         session['atks'] = [
             {'sub_attacks':
-                [{'attack': '3d4+1'},
-                 {'attack': '+4 3d8'},
-                 {'attack': '+1 3d8'},
-                 ],
+                [{'attack': '3d4+1'}],
              },
             {'sub_attacks':
-                [{'attack': '+8 1d8+5'}],
+                [{'attack': 'advantage +8 1d8+5'}],
              }
         ]
     attackform = AttackForm(attacks=session["atks"])
@@ -128,16 +109,21 @@ def index():
         for entry in attackform.attacks:
             current = []
             for attack in entry.sub_attacks:
-                ui = UserInput(attack)
-                if ui.valid:
-                    current.append(ui)
-                    logging.info("got %s", ui.attack)
+                ui = Attack.from_string(attack.data['attack'])
+                current.append(ui)
+                logging.info("got %s", ui)
             form_data.append(current)
         ids, graphjson = make_graphjson(form_data)
         return render_template('index.html', form=attackform, ids=ids, graphJSON=graphjson,
                                sharelink=form_encode(attackform.attacks.data))
 
     return render_template('index.html', form=attackform)
+
+
+@app.route('/examples', methods=('GET', 'POST'))
+def examples():
+    print(data.examples)
+    return render_template('examples.html', tada=data.examples)
 
 
 if __name__ == '__main__':

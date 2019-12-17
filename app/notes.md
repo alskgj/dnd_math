@@ -34,3 +34,13 @@ a +10 1d8 +3 (c:19)
 --> requires 3d plot, damage depends on both ac and save
 - fireball, but we must make a ranged spell attack with our +3 to hit, and target can still save for half dmg
 +3 3d8 (s:+5,half)
+
+
+## TODO
+add buttons to all input fields with something like
+  <div class="input-group mb-3">
+  <div class="input-group-prepend">
+    <button class="btn btn-outline-secondary" type="button" data-toggle="modal" data-target="#exampleModalLong">Button</button>
+  </div>
+  <input type="text" class="form-control" placeholder="" aria-label="" aria-describedby="basic-addon1">
+</div>

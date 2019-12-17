@@ -3,3 +3,10 @@
     margin: 0 auto;
     word-break: break-all;
 }
+
+.custom-area {
+    padding: 1.5rem;
+    margin-right: 0;
+    margin-left: 0;
+    border-width: .2rem;
+}
